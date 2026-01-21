@@ -269,24 +269,22 @@ export const HabitGrid: React.FC = () => {
                                  dark:text-white sticky left-0 bg-white dark:bg-gray-800 z-10">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate">{habit.name}</span>
-                        {hoveredHabit === habit.id && (
-                          <div className="flex gap-1 animate-fade-in">
-                            <button
-                              onClick={() => handleEdit({ id: habit.id, name: habit.name })}
-                              className="p-1 text-gray-500 hover:text-blue-500 transition-colors"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            {!habit.isDefault && (
-                              <button
-                                onClick={() => handleDelete(habit.id, habit.name)}
-                                className="p-1 text-gray-500 hover:text-red-500 transition-colors"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                        <div className={`flex gap-1 ${hoveredHabit === habit.id ? 'opacity-100' : 'opacity-0'} transition-opacity`}>
+                          <button
+                            onClick={() => handleEdit({ id: habit.id, name: habit.name })}
+                            className="p-1 text-gray-500 hover:text-blue-500 transition-colors"
+                            title="Edit habit"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(habit.id, habit.name)}
+                            className="p-1 text-gray-500 hover:text-red-500 transition-colors"
+                            title="Delete habit"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     </td>
                     {days.map(day => (
