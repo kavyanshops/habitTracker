@@ -4,6 +4,9 @@ export type HabitStatus = 'empty' | 'check' | 'cross';
 // Mood types
 export type MoodType = 'very-happy' | 'happy' | 'neutral' | 'sad' | 'very-sad' | null;
 
+// Meal types
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 // Habit interface
 export interface Habit {
   id: string;
@@ -24,6 +27,48 @@ export interface MoodEntry {
 export interface ScreenTimeEntry {
   day: number;
   hours: number;
+}
+
+// Water intake entry
+export interface WaterIntakeEntry {
+  day: number;
+  glasses: number; // number of glasses (1 glass = 250ml)
+}
+
+// Exercise entry for gym
+export interface Exercise {
+  id: string;
+  name: string;
+  sets: number;
+  reps: number;
+  weight: number; // in kg
+}
+
+// Gym session entry
+export interface GymSessionEntry {
+  day: number;
+  exercises: Exercise[];
+  duration: number; // in minutes
+  notes?: string;
+}
+
+// Food entry
+export interface FoodEntry {
+  id: string;
+  name: string;
+  calories: number;
+  protein?: number; // in grams
+  carbs?: number; // in grams
+  fats?: number; // in grams
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+}
+
+// Daily food log
+export interface DailyFoodLog {
+  day: number;
+  foods: FoodEntry[];
+  totalCalories: number;
+  targetCalories: number;
 }
 
 // Level thresholds
@@ -75,6 +120,10 @@ export interface TrackerState {
   habits: Habit[];
   moods: MoodEntry[];
   screenTime: ScreenTimeEntry[];
+  waterIntake: WaterIntakeEntry[];
+  gymSessions: GymSessionEntry[];
+  foodLogs: DailyFoodLog[];
+  calorieTarget: number;
   level: number;
   xp: number;
   streak: number;
@@ -90,6 +139,11 @@ export type TrackerAction =
   | { type: 'DELETE_HABIT'; payload: string }
   | { type: 'SET_MOOD'; payload: MoodEntry }
   | { type: 'SET_SCREEN_TIME'; payload: ScreenTimeEntry }
+  | { type: 'SET_WATER_INTAKE'; payload: WaterIntakeEntry }
+  | { type: 'SET_GYM_SESSION'; payload: GymSessionEntry }
+  | { type: 'ADD_FOOD_ENTRY'; payload: { day: number; food: FoodEntry } }
+  | { type: 'REMOVE_FOOD_ENTRY'; payload: { day: number; foodId: string } }
+  | { type: 'SET_CALORIE_TARGET'; payload: number }
   | { type: 'UPDATE_XP'; payload: number }
   | { type: 'UPDATE_LEVEL'; payload: number }
   | { type: 'UPDATE_STREAK'; payload: number }

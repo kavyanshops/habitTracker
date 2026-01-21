@@ -9,6 +9,10 @@ export const saveToStorage = (state: TrackerState): void => {
       habits: state.habits,
       moods: state.moods,
       screenTime: state.screenTime,
+      waterIntake: state.waterIntake,
+      gymSessions: state.gymSessions,
+      foodLogs: state.foodLogs,
+      calorieTarget: state.calorieTarget,
       level: state.level,
       xp: state.xp,
       streak: state.streak,
@@ -20,6 +24,7 @@ export const saveToStorage = (state: TrackerState): void => {
       darkMode: state.darkMode,
       level: state.level,
       xp: state.xp,
+      calorieTarget: state.calorieTarget,
     }));
   } catch (error) {
     console.error('Failed to save to localStorage:', error);
@@ -44,7 +49,7 @@ export const loadFromStorage = (month: number, year: number): Partial<TrackerSta
 };
 
 // Load global settings
-export const loadGlobalSettings = (): { darkMode: boolean; level: number; xp: number } | null => {
+export const loadGlobalSettings = (): { darkMode: boolean; level: number; xp: number; calorieTarget?: number } | null => {
   try {
     const data = localStorage.getItem('tracker_settings');
     if (data) {

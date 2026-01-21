@@ -11,6 +11,9 @@ import MonthlyReport from './components/MonthlyReport';
 import StreakCounter from './components/StreakCounter';
 import MotivationalQuote from './components/MotivationalQuote';
 import TodaySummary from './components/TodaySummary';
+import { WaterIntakeCard } from './components/WaterIntakeCard';
+import { GymSessionCard } from './components/GymSessionCard';
+import { FoodTracker } from './components/FoodTracker';
 
 const App: React.FC = () => {
   return (
@@ -71,6 +74,13 @@ const App: React.FC = () => {
             <div className="md:col-span-1 lg:col-span-2">
               <MoodTracker />
             </div>
+          </div>
+          
+          {/* Health & Fitness Row */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <WaterIntakeCard />
+            <GymSessionCard />
+            <FoodTracker />
           </div>
           
           {/* Fourth row - Screen Time */}

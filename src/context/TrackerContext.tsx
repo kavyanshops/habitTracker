@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import { TrackerState, TrackerAction, Habit, MoodEntry, ScreenTimeEntry } from '../types';
+import { TrackerState, TrackerAction, Habit, MoodEntry, ScreenTimeEntry, WaterIntakeEntry, GymSessionEntry, FoodEntry, DailyFoodLog } from '../types';
 import { DEFAULT_HABITS } from '../utils/constants';
 import { getCurrentMonth, getCurrentYear, getDaysInMonthCount } from '../utils/dateUtils';
 import { cycleHabitStatus, generateId, calculateMonthlyXP, calculateLevelFromXP, calculateOverallStreak } from '../utils/calculations';
@@ -21,6 +21,10 @@ const initialState: TrackerState = {
   habits: createDefaultHabits(),
   moods: [],
   screenTime: [],
+  waterIntake: [],
+  gymSessions: [],
+  foodLogs: [],
+  calorieTarget: 2000,
   level: 1,
   xp: 0,
   streak: 0,
@@ -108,6 +112,76 @@ const trackerReducer = (state: TrackerState, action: TrackerAction): TrackerStat
       return { ...state, screenTime: newScreenTime };
     }
     
+    case 'SET_WATER_INTAKE': {
+      const existingIndex = state.waterIntake.findIndex(w => w.day === action.payload.day);
+      let newWaterIntake: WaterIntakeEntry[];
+      
+      if (existingIndex >= 0) {
+        newWaterIntake = [...state.waterIntake];
+        newWaterIntake[existingIndex] = action.payload;
+      } else {
+        newWaterIntake = [...state.waterIntake, action.payload];
+      }
+      
+      return { ...state, waterIntake: newWaterIntake };
+    }
+    
+    case 'SET_GYM_SESSION': {
+      const existingIndex = state.gymSessions.findIndex(g => g.day === action.payload.day);
+      let newGymSessions: GymSessionEntry[];
+      
+      if (existingIndex >= 0) {
+        newGymSessions = [...state.gymSessions];
+        newGymSessions[existingIndex] = action.payload;
+      } else {
+        newGymSessions = [...state.gymSessions, action.payload];
+      }
+      
+      return { ...state, gymSessions: newGymSessions };
+    }
+    
+    case 'ADD_FOOD_ENTRY': {
+      const { day, food } = action.payload;
+      const existingIndex = state.foodLogs.findIndex(f => f.day === day);
+      let newFoodLogs: DailyFoodLog[];
+      
+      if (existingIndex >= 0) {
+        const existingLog = state.foodLogs[existingIndex];
+        const updatedFoods = [...existingLog.foods, food];
+        const totalCalories = updatedFoods.reduce((sum, f) => sum + f.calories, 0);
+        newFoodLogs = [...state.foodLogs];
+        newFoodLogs[existingIndex] = { ...existingLog, foods: updatedFoods, totalCalories };
+      } else {
+        newFoodLogs = [...state.foodLogs, {
+          day,
+          foods: [food],
+          totalCalories: food.calories,
+          targetCalories: state.calorieTarget,
+        }];
+      }
+      
+      return { ...state, foodLogs: newFoodLogs };
+    }
+    
+    case 'REMOVE_FOOD_ENTRY': {
+      const { day, foodId } = action.payload;
+      const existingIndex = state.foodLogs.findIndex(f => f.day === day);
+      
+      if (existingIndex >= 0) {
+        const existingLog = state.foodLogs[existingIndex];
+        const updatedFoods = existingLog.foods.filter(f => f.id !== foodId);
+        const totalCalories = updatedFoods.reduce((sum, f) => sum + f.calories, 0);
+        const newFoodLogs = [...state.foodLogs];
+        newFoodLogs[existingIndex] = { ...existingLog, foods: updatedFoods, totalCalories };
+        return { ...state, foodLogs: newFoodLogs };
+      }
+      
+      return state;
+    }
+    
+    case 'SET_CALORIE_TARGET':
+      return { ...state, calorieTarget: action.payload };
+    
     case 'UPDATE_XP':
       return { ...state, xp: action.payload };
       
@@ -129,6 +203,9 @@ const trackerReducer = (state: TrackerState, action: TrackerAction): TrackerStat
         habits: createDefaultHabits(),
         moods: [],
         screenTime: [],
+        waterIntake: [],
+        gymSessions: [],
+        foodLogs: [],
         streak: 0,
       };
       
@@ -147,6 +224,11 @@ interface TrackerContextType {
   deleteHabit: (id: string) => void;
   setMood: (day: number, mood: MoodEntry['mood']) => void;
   setScreenTime: (day: number, hours: number) => void;
+  setWaterIntake: (day: number, glasses: number) => void;
+  setGymSession: (day: number, exercises: GymSessionEntry['exercises'], duration: number, notes?: string) => void;
+  addFoodEntry: (day: number, food: FoodEntry) => void;
+  removeFoodEntry: (day: number, foodId: string) => void;
+  setCalorieTarget: (target: number) => void;
   navigateMonth: (direction: 'prev' | 'next') => void;
   toggleDarkMode: () => void;
 }
@@ -242,6 +324,26 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dispatch({ type: 'SET_SCREEN_TIME', payload: { day, hours } });
   }, []);
   
+  const setWaterIntake = useCallback((day: number, glasses: number) => {
+    dispatch({ type: 'SET_WATER_INTAKE', payload: { day, glasses } });
+  }, []);
+  
+  const setGymSession = useCallback((day: number, exercises: GymSessionEntry['exercises'], duration: number, notes?: string) => {
+    dispatch({ type: 'SET_GYM_SESSION', payload: { day, exercises, duration, notes } });
+  }, []);
+  
+  const addFoodEntry = useCallback((day: number, food: FoodEntry) => {
+    dispatch({ type: 'ADD_FOOD_ENTRY', payload: { day, food } });
+  }, []);
+  
+  const removeFoodEntry = useCallback((day: number, foodId: string) => {
+    dispatch({ type: 'REMOVE_FOOD_ENTRY', payload: { day, foodId } });
+  }, []);
+  
+  const setCalorieTarget = useCallback((target: number) => {
+    dispatch({ type: 'SET_CALORIE_TARGET', payload: target });
+  }, []);
+  
   const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     let newMonth = state.currentMonth;
     let newYear = state.currentYear;
@@ -277,6 +379,11 @@ export const TrackerProvider: React.FC<{ children: React.ReactNode }> = ({ child
       deleteHabit,
       setMood,
       setScreenTime,
+      setWaterIntake,
+      setGymSession,
+      addFoodEntry,
+      removeFoodEntry,
+      setCalorieTarget,
       navigateMonth,
       toggleDarkMode,
     }}>
